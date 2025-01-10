@@ -1,0 +1,94 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Function to get user input for salary
+def get_salary():
+    while True:
+        try:
+            salary = float(input("Enter your monthly salary: "))
+            if salary < 0:
+                print("Salary cannot be negative. Please try again.")
+                continue
+            return salary
+        except ValueError:
+            print("Invalid input. Please enter a numeric value.")
+
+# Function to get user input for expenses
+def get_user_input():
+    print("\nEnter your expenses. Type 'done' when finished.")
+    data = {'Category': [], 'Amount': []}
+    
+    while True:
+        category = input("Enter expense category (or type 'done' to finish): ").strip()
+        if category.lower() == 'done':
+            break
+        try:
+            amount = float(input(f"Enter amount for {category}: "))
+            data['Category'].append(category)
+            data['Amount'].append(amount)
+        except ValueError:
+            print("Invalid amount. Please enter a numeric value.")
+    
+    return data
+
+# Function to suggest saving strategies
+def suggest_saving_strategies(expense_categories, salary, savings):
+    suggestions = []
+    if savings < salary * 0.2:
+        suggestions.append("Consider setting aside at least 20% of your salary for savings.")
+    if 'Entertainment' in expense_categories and expense_categories['Entertainment'] > salary * 0.1:
+        suggestions.append("Reduce spending on entertainment to no more than 10% of your salary.")
+    if 'Dining Out' in expense_categories and expense_categories['Dining Out'] > salary * 0.1:
+        suggestions.append("Limit dining out to once or twice a week to save more.")
+    if 'Subscriptions' in expense_categories and expense_categories['Subscriptions'] > salary * 0.05:
+        suggestions.append("Review your subscriptions and cancel unused ones.")
+    if 'Shopping' in expense_categories and expense_categories['Shopping'] > salary * 0.1:
+        suggestions.append("Create a shopping budget and stick to it to avoid overspending.")
+    
+    if not suggestions:
+        suggestions.append("Great job! Your expenses are well within reasonable limits. Consider investing your savings.")
+    
+    return suggestions
+
+# Get salary and expense data from the user
+salary = get_salary()
+user_data = get_user_input()
+
+# Convert expense data into a DataFrame
+df = pd.DataFrame(user_data)
+
+# Group by category and sum the amounts
+expense_categories = df.groupby('Category')['Amount'].sum()
+
+# Filter out negative values
+expense_categories = expense_categories[expense_categories >= 0]
+
+# Calculate total expenses and savings
+total_expenses = expense_categories.sum()
+savings = salary - total_expenses
+
+# Generate textual summary
+print(f"\nMonthly Salary: ${salary:.2f}")
+print(f"Total Expenses: ${total_expenses:.2f}")
+print(f"Savings: ${savings:.2f}\n")
+
+print("Expense Breakdown by Category:")
+for category, amount in expense_categories.items():
+    percentage = (amount / total_expenses) * 100
+    print(f"  - {category}: ${amount:.2f} ({percentage:.1f}%)")
+
+# Plot Expenses by Category
+expense_categories.plot(
+    kind='pie',
+    autopct='%1.1f%%',
+    startangle=90,
+    title="Expenses by Category"
+)
+plt.ylabel("")  # Hide y-label for better visual
+plt.show()
+
+# Generate and display saving strategies
+print("\nSaving Strategies:")
+saving_suggestions = suggest_saving_strategies(expense_categories, salary, savings)
+for suggestion in saving_suggestions:
+    print(f"  - {suggestion}")
